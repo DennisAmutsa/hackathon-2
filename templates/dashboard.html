@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Storefront Builder{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Admin Dashboard</h2>
+        <div>
+            <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary me-2">User Management</a>
+            <a href="{{ url_for('audit_log') }}" class="btn btn-outline-secondary me-2">Audit Log</a>
+            <a href="{{ url_for('manager_dashboard') }}" class="btn btn-outline-info">Manager Dashboard</a>
+        </div>
+    </div>
+    <!-- Global Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Income</h5>
+                    <h3 class="card-text">${{ '%.2f'|format(total_income) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Expenses</h5>
+                    <h3 class="card-text">${{ '%.2f'|format(total_expense) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card {% if net_amount >= 0 %}bg-primary{% else %}bg-warning{% endif %} text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Net Amount</h5>
+                    <h3 class="card-text">${{ '%.2f'|format(net_amount) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Analytics Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Analytics</div>
+                <div class="card-body">
+                    <canvas id="netAmountChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- All Transactions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">All Transactions</div>
+                <div class="card-body table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transactions %}
+                            <tr>
+                                <td>{{ t.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>${{ '%.2f'|format(t.amount) }}</td>
+                                <td><span class="badge {% if t.type == 'income' %}bg-success{% else %}bg-danger{% endif %}">{{ t.type }}</span></td>
+                                <td>{{ t.description }}</td>
+                                <td>{% if t.categories %}{{ t.categories[0].name }}{% else %}Uncategorized{% endif %}</td>
+                                <td>{{ t.user.username }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- All Categories -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">All Categories</div>
+                <div class="card-body table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>User</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in categories %}
+                            <tr>
+                                <td>{{ c.name }}</td>
+                                <td>{{ c.type }}</td>
+                                <td>{% if c.user %}{{ c.user.username }}{% else %}Global{% endif %}</td>
+                                <td>{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prepare data for the net amount chart
+    const transactions = [
+        {% for t in transactions|sort(attribute='date') %}
+            { date: '{{ t.date.strftime('%Y-%m-%d %H:%M') }}', type: '{{ t.type }}', amount: {{ t.amount }} },
+        {% endfor %}
+    ];
+    let net = 0;
+    const labels = [];
+    const netData = [];
+    transactions.forEach(t => {
+        if (t.type === 'income') net += t.amount;
+        else net -= t.amount;
+        labels.push(t.date);
+        netData.push(net);
+    });
+    const ctx = document.getElementById('netAmountChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Net Amount',
+                data: netData,
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0,123,255,0.1)',
+                fill: true,
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } }
+        }
+    });
+});
+</script>
+{% endblock %} 

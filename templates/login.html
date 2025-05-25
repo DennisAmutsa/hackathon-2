@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Storefront Builder{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    }
+    .login-logo {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #007bff;
+        margin-bottom: 1rem;
+        letter-spacing: 1px;
+    }
+    .card {
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%);
+        border: none;
+        border-radius: 2rem;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #0056b3 0%, #00aaff 100%);
+    }
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15);
+    }
+</style>
+<div class="row justify-content-center align-items-center" style="min-height: 90vh;">
+    <div class="col-md-6 col-lg-4">
+        <div class="text-center login-logo">
+            <i class="fas fa-store"></i> Storefront Builder
+        </div>
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white text-center rounded-top-4">
+                <h3 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Login</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-block py-2"><i class="fas fa-sign-in-alt me-1"></i>Login</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <span>Don't have an account?</span>
+                    <a href="{{ url_for('register') }}" class="text-decoration-none fw-bold">Register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Font Awesome for icons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+{% endblock %} 

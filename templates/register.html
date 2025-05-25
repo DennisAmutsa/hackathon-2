@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Storefront Builder{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    }
+    .register-logo {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #28a745;
+        margin-bottom: 1rem;
+        letter-spacing: 1px;
+    }
+    .card {
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    }
+    .btn-success {
+        background: linear-gradient(90deg, #28a745 0%, #00c851 100%);
+        border: none;
+        border-radius: 2rem;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+    .btn-success:hover {
+        background: linear-gradient(90deg, #218838 0%, #00b34d 100%);
+    }
+    .form-control:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40,167,69,.15);
+    }
+</style>
+<div class="row justify-content-center align-items-center" style="min-height: 90vh;">
+    <div class="col-md-6 col-lg-5">
+        <div class="text-center register-logo">
+            <i class="fas fa-store"></i> Storefront Builder
+        </div>
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-success text-white text-center rounded-top-4">
+                <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Register</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Choose a username" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Create a password" required>
+                    </div>
+                    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <select class="form-select" id="role" name="role">
+                            <option value="user">User</option>
+                            <option value="manager">Manager</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-success btn-block py-2"><i class="fas fa-user-plus me-1"></i>Register</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <span>Already have an account?</span>
+                    <a href="{{ url_for('login') }}" class="text-decoration-none fw-bold">Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Font Awesome for icons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+{% endblock %} 

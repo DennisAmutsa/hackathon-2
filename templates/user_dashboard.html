@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard - Storefront Builder{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">My Dashboard</h2>
+    <!-- Add Transaction Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Add New Transaction</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Add Category Form -->
+                    <div class="mb-4">
+                        <h5>Add New Category</h5>
+                        <form id="addCategoryForm" class="row g-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="categoryName" placeholder="Category Name" required>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="categoryType" required>
+                                    <option value="income">Income</option>
+                                    <option value="expense">Expense</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary">Add Category</button>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- Transaction Form -->
+                    <form method="POST" action="{{ url_for('add_transaction') }}">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="amount" class="form-label">Amount</label>
+                                    <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="type" class="form-label">Type</label>
+                                    <select class="form-select" id="type" name="type" required>
+                                        <option value="income">Income</option>
+                                        <option value="expense">Expense</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-select" id="category" name="category">
+                                        <option value="">Select Category</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" data-type="{{ category.type }}">
+                                            {{ category.name }} ({{ category.type }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="source_type" class="form-label">Input Method</label>
+                                    <select class="form-select" id="source_type" name="source_type">
+                                        <option value="manual">Manual</option>
+                                        <option value="voice">Voice</option>
+                                        <option value="photo">Photo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Hidden sections for voice and photo input -->
+                        <div id="voiceInputSection" class="mb-3 d-none">
+                            <button type="button" class="btn btn-primary" id="startRecording">
+                                <i class="fas fa-microphone"></i> Start Recording
+                            </button>
+                            <button type="button" class="btn btn-danger d-none" id="stopRecording">
+                                <i class="fas fa-stop"></i> Stop Recording
+                            </button>
+                            <div id="recordingStatus" class="mt-2"></div>
+                        </div>
+                        <div id="photoInputSection" class="mb-3 d-none">
+                            <input type="file" class="form-control" id="photoInput" accept="image/*" capture="environment">
+                            <div id="photoPreview" class="mt-2"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="description" name="description">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Transaction</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Income</h5>
+                    <h3 class="card-text">${{ '%.2f'|format(total_income) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Expenses</h5>
+                    <h3 class="card-text">${{ '%.2f'|format(total_expense) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card {% if net_amount >= 0 %}bg-primary{% else %}bg-warning{% endif %} text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Net Amount</h5>
+                    <h3 class="card-text">${{ '%.2f'|format(net_amount) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Analytics Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Analytics</div>
+                <div class="card-body">
+                    <canvas id="netAmountChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Recent Transactions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Recent Transactions</div>
+                <div class="card-body table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transactions[:10] %}
+                            <tr>
+                                <td>{{ t.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>${{ '%.2f'|format(t.amount) }}</td>
+                                <td><span class="badge {% if t.type == 'income' %}bg-success{% else %}bg-danger{% endif %}">{{ t.type }}</span></td>
+                                <td>{{ t.description }}</td>
+                                <td>{% if t.categories %}{{ t.categories[0].name }}{% else %}Uncategorized{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Categories -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">My Categories</div>
+                <div class="card-body table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in categories %}
+                            <tr>
+                                <td>{{ c.name }}</td>
+                                <td>{{ c.type }}</td>
+                                <td>{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Prepare data for the net amount chart
+    const transactions = [
+        {% for t in transactions|sort(attribute='date') %}
+            { date: '{{ t.date.strftime('%Y-%m-%d %H:%M') }}', type: '{{ t.type }}', amount: {{ t.amount }} },
+        {% endfor %}
+    ];
+    let net = 0;
+    const labels = [];
+    const netData = [];
+    transactions.forEach(t => {
+        if (t.type === 'income') net += t.amount;
+        else net -= t.amount;
+        labels.push(t.date);
+        netData.push(net);
+    });
+    const ctx = document.getElementById('netAmountChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Net Amount',
+                data: netData,
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0,123,255,0.1)',
+                fill: true,
+                tension: 0.2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } }
+        }
+    });
+
+    // Voice Recording Setup
+    let mediaRecorder;
+    let audioChunks = [];
+    const startRecordingBtn = document.getElementById('startRecording');
+    const stopRecordingBtn = document.getElementById('stopRecording');
+    const recordingStatus = document.getElementById('recordingStatus');
+
+    if (startRecordingBtn && stopRecordingBtn) {
+        startRecordingBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result;
+                        try {
+                            const response = await fetch('{{ url_for("process_voice") }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ audio_data: base64Audio })
+                            });
+                            const data = await response.json();
+                            if (data.error) {
+                                recordingStatus.textContent = `Error: ${data.error}`;
+                            } else {
+                                // Fill the form with the processed data
+                                document.getElementById('amount').value = data.amount;
+                                document.getElementById('type').value = data.type;
+                                document.getElementById('description').value = data.description;
+                                recordingStatus.textContent = 'Voice processed successfully!';
+                            }
+                        } catch (error) {
+                            recordingStatus.textContent = `Error processing voice: ${error.message}`;
+                        }
+                    };
+                };
+
+                mediaRecorder.start();
+                startRecordingBtn.classList.add('d-none');
+                stopRecordingBtn.classList.remove('d-none');
+                recordingStatus.textContent = 'Recording...';
+            } catch (error) {
+                recordingStatus.textContent = `Error accessing microphone: ${error.message}`;
+            }
+        });
+
+        stopRecordingBtn.addEventListener('click', () => {
+            mediaRecorder.stop();
+            startRecordingBtn.classList.remove('d-none');
+            stopRecordingBtn.classList.add('d-none');
+            recordingStatus.textContent = 'Processing voice...';
+        });
+    }
+
+    // Photo Capture Setup
+    const photoInput = document.getElementById('photoInput');
+    const photoPreview = document.getElementById('photoPreview');
+
+    if (photoInput && photoPreview) {
+        photoInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const response = await fetch('{{ url_for("process_photo") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ image_data: e.target.result })
+                        });
+                        const data = await response.json();
+                        if (data.error) {
+                            photoPreview.textContent = `Error: ${data.error}`;
+                        } else {
+                            // Fill the form with the processed data
+                            document.getElementById('amount').value = data.amount;
+                            document.getElementById('type').value = data.type;
+                            document.getElementById('description').value = data.description;
+                            photoPreview.textContent = 'Photo processed successfully!';
+                        }
+                    } catch (error) {
+                        photoPreview.textContent = `Error processing photo: ${error.message}`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Show/hide input sections based on input method
+    const sourceTypeSelect = document.getElementById('source_type');
+    const voiceInputSection = document.getElementById('voiceInputSection');
+    const photoInputSection = document.getElementById('photoInputSection');
+
+    sourceTypeSelect.addEventListener('change', function() {
+        voiceInputSection.classList.add('d-none');
+        photoInputSection.classList.add('d-none');
+        if (this.value === 'voice') {
+            voiceInputSection.classList.remove('d-none');
+        } else if (this.value === 'photo') {
+            photoInputSection.classList.remove('d-none');
+        }
+    });
+
+    // Category Management
+    const addCategoryForm = document.getElementById('addCategoryForm');
+    const categorySelect = document.getElementById('category');
+    const transactionType = document.getElementById('type');
+
+    // Filter categories based on transaction type
+    transactionType.addEventListener('change', function() {
+        const selectedType = this.value;
+        Array.from(categorySelect.options).forEach(option => {
+            if (option.value === '') return; // Skip the "Select Category" option
+            const categoryType = option.getAttribute('data-type');
+            option.style.display = categoryType === selectedType ? '' : 'none';
+        });
+        categorySelect.value = ''; // Reset selection
+    });
+
+    // Add new category
+    addCategoryForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('categoryName').value;
+        const type = document.getElementById('categoryType').value;
+
+        try {
+            const response = await fetch('/add_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, type })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                // Add new option to category select
+                const option = new Option(`${data.name} (${data.type})`, data.id);
+                option.setAttribute('data-type', data.type);
+                categorySelect.add(option);
+                
+                // Clear form
+                document.getElementById('categoryName').value = '';
+                
+                // Show success message
+                alert('Category added successfully!');
+            } else {
+                alert(data.message || 'Error adding category');
+            }
+        } catch (error) {
+            alert('Error adding category: ' + error.message);
+        }
+    });
+});
+</script>
+{% endblock %} 

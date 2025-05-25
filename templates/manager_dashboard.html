@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block title %}Manager Dashboard - Storefront Builder{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Manager Dashboard</h2>
+        <div>
+            <a href="{{ url_for('team') }}" class="btn btn-outline-primary">Team Management</a>
+        </div>
+    </div>
+    <!-- Transaction Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Income</h5>
+                    <h3 class="card-text">${{ "%.2f"|format(total_income) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Expenses</h5>
+                    <h3 class="card-text">${{ "%.2f"|format(total_expense) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card {% if net_amount >= 0 %}bg-primary{% else %}bg-warning{% endif %} text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Net Amount</h5>
+                    <h3 class="card-text">${{ "%.2f"|format(net_amount) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Add New Transaction</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_transaction') }}">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="amount" class="form-label">Amount</label>
+                                    <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="type" class="form-label">Type</label>
+                                    <select class="form-select" id="type" name="type" required>
+                                        <option value="income">Income</option>
+                                        <option value="expense">Expense</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="category" name="category">
+                                            <option value="">Select Category</option>
+                                            {% for category in categories %}
+                                            <option value="{{ category.id }}" data-type="{{ category.type }}">
+                                                {{ category.name }} ({{ category.type }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newCategoryModal">
+                                            <i class="fas fa-plus"></i> New
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="source_type" class="form-label">Input Method</label>
+                                    <select class="form-select" id="source_type" name="source_type">
+                                        <option value="manual">Manual</option>
+                                        <option value="voice">Voice</option>
+                                        <option value="photo">Photo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="description" name="description">
+                        </div>
+                        <!-- Hidden sections for voice and photo input -->
+                        <div id="voiceInputSection" class="mb-3 d-none">
+                            <button type="button" class="btn btn-primary" id="startRecording">
+                                <i class="fas fa-microphone"></i> Start Recording
+                            </button>
+                            <button type="button" class="btn btn-danger d-none" id="stopRecording">
+                                <i class="fas fa-stop"></i> Stop Recording
+                            </button>
+                            <div id="recordingStatus" class="mt-2"></div>
+                        </div>
+                        <div id="photoInputSection" class="mb-3 d-none">
+                            <input type="file" class="form-control" id="photoInput" accept="image/*" capture="environment">
+                            <div id="photoPreview" class="mt-2"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Transaction</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Recent Transactions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>User</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions[:10] %}
+                                <tr>
+                                    <td>{{ transaction.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>${{ "%.2f"|format(transaction.amount) }}</td>
+                                    <td>
+                                        <span class="badge {% if transaction.type == 'income' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ transaction.type }}
+                                        </span>
+                                    </td>
+                                    <td>{{ transaction.description }}</td>
+                                    <td>
+                                        {% if transaction.categories %}
+                                            {{ transaction.categories[0].name }}
+                                        {% else %}
+                                            Uncategorized
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ transaction.user.username }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>User Activity</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Last Transaction</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in user_activity %}
+                                <tr>
+                                    <td>{{ transaction.user.username }}</td>
+                                    <td>{{ transaction.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>${{ "%.2f"|format(transaction.amount) }}</td>
+                                    <td>
+                                        <span class="badge {% if transaction.type == 'income' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ transaction.type }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Category Modal -->
+<div class="modal fade" id="newCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newCategoryForm">
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="categoryName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categoryType" class="form-label">Type</label>
+                        <select class="form-select" id="categoryType" required>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('type');
+    const categorySelect = document.getElementById('category');
+    
+    function updateCategories() {
+        const selectedType = typeSelect.value;
+        // Filter and show/hide categories
+        const categoryOptions = Array.from(categorySelect.options);
+        categoryOptions.forEach(option => {
+            if (option.value === '') {
+                option.style.display = '';
+                return;
+            }
+            const categoryType = option.getAttribute('data-type');
+            if (categoryType === selectedType) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        // Select the first visible category
+        const visibleOptions = categoryOptions.filter(option => 
+            option.style.display !== 'none' && option.value !== ''
+        );
+        if (visibleOptions.length > 0) {
+            categorySelect.value = visibleOptions[0].value;
+        } else {
+            categorySelect.value = '';
+        }
+    }
+    updateCategories();
+    typeSelect.addEventListener('change', updateCategories);
+
+    // New Category Form Handling
+    const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+    const newCategoryForm = document.getElementById('newCategoryForm');
+    const categoryNameInput = document.getElementById('categoryName');
+    const categoryTypeInput = document.getElementById('categoryType');
+    document.querySelector('[data-bs-target="#newCategoryModal"]').addEventListener('click', function() {
+        categoryTypeInput.value = typeSelect.value;
+    });
+    saveCategoryBtn.addEventListener('click', async function() {
+        const name = categoryNameInput.value.trim();
+        const type = categoryTypeInput.value;
+        if (!name) {
+            alert('Please enter a category name');
+            return;
+        }
+        try {
+            const response = await fetch('/add_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    type: type
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                // Add the new category to the select
+                const option = new Option(`${name} (${type})`, data.id);
+                option.setAttribute('data-type', type);
+                categorySelect.add(option);
+                // Select the new category
+                categorySelect.value = data.id;
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newCategoryModal'));
+                modal.hide();
+                // Clear the form
+                newCategoryForm.reset();
+                // Update categories to ensure proper filtering
+                updateCategories();
+            } else {
+                alert(data.message || 'Failed to add category');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to add category');
+        }
+    });
+
+    // Voice Recording Setup
+    let mediaRecorder;
+    let audioChunks = [];
+    const startRecordingBtn = document.getElementById('startRecording');
+    const stopRecordingBtn = document.getElementById('stopRecording');
+    const recordingStatus = document.getElementById('recordingStatus');
+
+    if (startRecordingBtn && stopRecordingBtn) {
+        startRecordingBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result;
+                        try {
+                            const response = await fetch('{{ url_for("process_voice") }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ audio_data: base64Audio })
+                            });
+                            const data = await response.json();
+                            if (data.error) {
+                                recordingStatus.textContent = `Error: ${data.error}`;
+                            } else {
+                                // Fill the form with the processed data
+                                document.getElementById('amount').value = data.amount;
+                                document.getElementById('type').value = data.type;
+                                document.getElementById('description').value = data.description;
+                                recordingStatus.textContent = 'Voice processed successfully!';
+                            }
+                        } catch (error) {
+                            recordingStatus.textContent = `Error processing voice: ${error.message}`;
+                        }
+                    };
+                };
+
+                mediaRecorder.start();
+                startRecordingBtn.classList.add('d-none');
+                stopRecordingBtn.classList.remove('d-none');
+                recordingStatus.textContent = 'Recording...';
+            } catch (error) {
+                recordingStatus.textContent = `Error accessing microphone: ${error.message}`;
+            }
+        });
+
+        stopRecordingBtn.addEventListener('click', () => {
+            mediaRecorder.stop();
+            startRecordingBtn.classList.remove('d-none');
+            stopRecordingBtn.classList.add('d-none');
+            recordingStatus.textContent = 'Processing voice...';
+        });
+    }
+
+    // Photo Capture Setup
+    const photoInput = document.getElementById('photoInput');
+    const photoPreview = document.getElementById('photoPreview');
+
+    if (photoInput && photoPreview) {
+        photoInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const response = await fetch('{{ url_for("process_photo") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ image_data: e.target.result })
+                        });
+                        const data = await response.json();
+                        if (data.error) {
+                            photoPreview.textContent = `Error: ${data.error}`;
+                        } else {
+                            // Fill the form with the processed data
+                            document.getElementById('amount').value = data.amount;
+                            document.getElementById('type').value = data.type;
+                            document.getElementById('description').value = data.description;
+                            photoPreview.textContent = 'Photo processed successfully!';
+                        }
+                    } catch (error) {
+                        photoPreview.textContent = `Error processing photo: ${error.message}`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Show/hide input sections based on input method
+    const sourceTypeSelect = document.getElementById('source_type');
+    const voiceInputSection = document.getElementById('voiceInputSection');
+    const photoInputSection = document.getElementById('photoInputSection');
+
+    sourceTypeSelect.addEventListener('change', function() {
+        voiceInputSection.classList.add('d-none');
+        photoInputSection.classList.add('d-none');
+        if (this.value === 'voice') {
+            voiceInputSection.classList.remove('d-none');
+        } else if (this.value === 'photo') {
+            photoInputSection.classList.remove('d-none');
+        }
+    });
+});
+</script>
+{% endblock %}

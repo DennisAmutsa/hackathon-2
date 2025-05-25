@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Storefront Builder{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    }
+    .hero-section {
+        padding: 60px 0 30px 0;
+        text-align: center;
+        background: none;
+    }
+    .hero-img {
+        max-width: 420px;
+        width: 100%;
+        margin: 0 auto 2rem auto;
+        display: block;
+        animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-12px); }
+    }
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #22223b;
+        margin-bottom: 0.5rem;
+        letter-spacing: -1px;
+    }
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: #4a4e69;
+        margin-bottom: 2.5rem;
+    }
+    .feature-cards {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-bottom: 2.5rem;
+        flex-wrap: wrap;
+    }
+    .feature-card {
+        background: #fff;
+        border-radius: 1rem;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+        padding: 2rem 1.5rem;
+        width: 260px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none;
+        text-align: center;
+    }
+    .feature-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #3a86ff;
+        margin-bottom: 1rem;
+        animation: pulse 1.5s infinite alternate;
+    }
+    @keyframes pulse {
+        0% { color: #3a86ff; }
+        100% { color: #4361ee; }
+    }
+    .cta-buttons {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    .btn-animated {
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+        font-size: 1.1rem;
+        padding: 0.75rem 2.5rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(58,134,255,0.08);
+    }
+    .btn-animated:hover {
+        background: #3a86ff;
+        color: #fff;
+        transform: translateY(-2px) scale(1.04);
+        box-shadow: 0 4px 16px rgba(58,134,255,0.18);
+    }
+    .feature-strip {
+        margin: 3rem 0 2rem 0;
+        padding: 1.5rem 0;
+        background: #f1f5ff;
+        border-radius: 1rem;
+        display: flex;
+        justify-content: center;
+        gap: 2.5rem;
+        flex-wrap: wrap;
+    }
+    .feature-strip .strip-icon {
+        font-size: 2rem;
+        color: #3a86ff;
+        margin-bottom: 0.5rem;
+    }
+    .testimonial-section {
+        margin-top: 3rem;
+        text-align: center;
+    }
+    blockquote {
+        font-style: italic;
+        color: #555;
+        border-left: 4px solid #3a86ff;
+        padding-left: 1rem;
+        margin: 1.5rem auto;
+        max-width: 600px;
+        background: #f8fafc;
+        border-radius: 0.5rem;
+    }
+    .footer {
+        margin-top: 5rem;
+        padding: 1.5rem 0 0.5rem 0;
+        text-align: center;
+        color: #6c757d;
+        font-size: 1rem;
+        border-top: 1px solid #e0e7ff;
+        background: none;
+    }
+</style>
+
+<div class="hero-section">
+    <!-- Hero Illustration (replace with your own image in static/img/) -->
+    <img src="{{ url_for('static', filename='img/storefront-hero.png') }}" class="hero-img" alt="Storefront Illustration">
+    <h1 class="hero-title">Welcome to Storefront Builder</h1>
+    <p class="hero-subtitle">Track your business finances easily with voice and photo input</p>
+    <div class="feature-cards">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-microphone"></i></div>
+            <h5>Voice Input</h5>
+            <p>Record your transactions using voice commands</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-camera"></i></div>
+            <h5>Photo Input</h5>
+            <p>Take photos of receipts to automatically record transactions</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+            <h5>Analytics</h5>
+            <p>View your business performance with easy-to-understand charts</p>
+        </div>
+    </div>
+    <div class="cta-buttons">
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-animated">Get Started</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-animated">Login</a>
+    </div>
+    <h4 class="mt-5">Start managing your store smarter, today!</h4>
+</div>
+
+<!-- Feature Strip -->
+<div class="feature-strip">
+    <div>
+        <div class="strip-icon"><i class="fas fa-mobile-alt"></i></div>
+        <p>Mobile-Friendly</p>
+    </div>
+    <div>
+        <div class="strip-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+        <p>Cloud-Based</p>
+    </div>
+    <div>
+        <div class="strip-icon"><i class="fas fa-clock"></i></div>
+        <p>Real-Time Tracking</p>
+    </div>
+    <div>
+        <div class="strip-icon"><i class="fas fa-chart-bar"></i></div>
+        <p>Easy Analytics</p>
+    </div>
+</div>
+
+<!-- Testimonials -->
+<div class="testimonial-section">
+    <h3>What Our Users Say</h3>
+    <blockquote>
+        <p class="mb-0">"This app helped me keep track of all my sales effortlessly!"</p>
+        <footer class="blockquote-footer">Amina, Local Shop Owner</footer>
+    </blockquote>
+    <!-- Add a demo GIF or more testimonials here if desired -->
+</div>
+
+<div class="footer">
+    &copy; {{ 2025 }} Storefront Builder &mdash; All rights reserved.
+</div>
+
+<!-- FontAwesome CDN for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<!-- Google Fonts for modern typography -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+{% endblock %} 

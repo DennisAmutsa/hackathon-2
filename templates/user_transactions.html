@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}'s Transactions - Storefront Builder{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ user.username }}'s Transactions</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>{{ t.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>${{ '%.2f'|format(t.amount) }}</td>
+                    <td><span class="badge {% if t.type == 'income' %}bg-success{% else %}bg-danger{% endif %}">{{ t.type }}</span></td>
+                    <td>{{ t.description }}</td>
+                    <td>{% if t.categories %}{{ t.categories[0].name }}{% else %}Uncategorized{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('team') }}" class="btn btn-secondary mt-3">Back to Team</a>
+</div>
+{% endblock %} 
