@@ -122,3 +122,21 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For support, please open an issue in the GitHub repository or contact the development team. 
+
+##  Group Members
+- Martin Mutwiri Gachanja 
+- Steve Ogolla Asumba 
+- Dennis Amutsa 
+- Simon Muriu Mbugua 
+- Hannah Machocho 
+-Liwa Watson Waswa
+-Cynthia Ongwenyi
+
+##  Group Members Emails
+- mutwirigachanja1@gmail.com
+- steveasumba@gmail.com
+- amutsadennis@gmail.com
+- muriumsimon6@gmail.com
+- machochohannah5@gmail.com
+- watsonliwa@yahoo.com
+- ongwenyicynthia@gmail.com
