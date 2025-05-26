@@ -139,4 +139,5 @@ For support, please open an issue in the GitHub repository or contact the develo
 - muriumsimon6@gmail.com
 - machochohannah5@gmail.com
 - watsonliwa@yahoo.com
+- onorah09@gmail.com
 - ongwenyicynthia@gmail.com
