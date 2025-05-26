@@ -129,8 +129,8 @@ For support, please open an issue in the GitHub repository or contact the develo
 - Dennis Amutsa 
 - Simon Muriu Mbugua 
 - Hannah Machocho 
--Liwa Watson Waswa
--Cynthia Ongwenyi
+- Liwa Watson Waswa
+- Cynthia Ongwenyi
 
 ##  Group Members Emails
 - mutwirigachanja1@gmail.com
